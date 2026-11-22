@@ -30,7 +30,7 @@ SNAKES = {
 }
 
 def move(pos, dice, ladders=LADDERS, snakes=SNAKES):
-    new_pos =  pos + dice
+    new_pos = pos + dice
 
     if new_pos > SIZE:
         return pos
