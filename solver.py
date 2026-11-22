@@ -8,8 +8,10 @@ from collections import deque
 
 from board import SIZE, LADDERS, SNAKES, move
 
-def bfs(start = 1, ladders=LADDERS, snakes=SNAKES):
+
+def bfs(start=1, ladders=LADDERS, snakes=SNAKES):
     dist = [-1] * (SIZE + 1)
+    parent = [-1] * (SIZE + 1)
 
     dist[start] = 0
     queue = deque([start])
@@ -22,6 +24,17 @@ def bfs(start = 1, ladders=LADDERS, snakes=SNAKES):
 
             if dist[next_pos] == -1:
                 dist[next_pos] = dist[current] + 1
+                parent[next_pos] = current
                 queue.append(next_pos)
 
-    return dist[SIZE]
+    if dist[SIZE] == -1:
+        return -1, []
+
+    path = []
+    pos = SIZE
+    while pos != -1:
+        path.append(pos)
+        pos = parent[pos]
+    path.reverse()
+
+    return dist[SIZE], path
