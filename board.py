@@ -1,12 +1,9 @@
 # board.py — Data papan Ular Tangga
 #
-# Isi file:
-#   - SIZE     : jumlah kotak di papan (100)
-#   - LADDERS  : posisi tangga, dalam bentuk {kaki: puncak}
-#   - SNAKES   : posisi ular, dalam bentuk {kepala: ekor}
-#   - move(pos, dice, ladders, snakes) -> posisi pion setelah satu lemparan dadu
-#
-# Status: BELUM DIKERJAKAN
+# SIZE     : jumlah kotak di papan (100)
+# LADDERS  : posisi tangga, dalam bentuk {kaki: puncak}
+# SNAKES   : posisi ular, dalam bentuk {kepala: ekor}
+# move(pos, dice, ladders, snakes) -> posisi pion setelah satu lemparan dadu
 
 SIZE = 100
 
@@ -31,3 +28,17 @@ SNAKES = {
     95: 75,
     99: 78,
 }
+
+def move(pos, dice, ladders=LADDERS, snakes=SNAKES):
+    new_pos =  pos + dice
+
+    if new_pos > SIZE:
+        return pos
+
+    if new_pos in ladders:
+        return ladders[new_pos]
+
+    if new_pos in snakes:
+        return snakes[new_pos]
+
+    return new_pos
