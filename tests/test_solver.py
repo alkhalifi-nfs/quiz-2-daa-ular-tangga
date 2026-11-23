@@ -1,16 +1,15 @@
-# tests/test_solver.py — Unit test untuk BFS
-# Penanggung jawab: Dheva (Anggota 2)
+# tests/test_solver.py — Unit tests for BFS
 #
-# Mencakup 3 skenario pengujian:
-#   1. Papan kosong (tanpa ular & tangga) -> minimal 17 lemparan
-#   2. Papan dengan tangga/ular           -> memanfaatkan tangga, menghindari ular
-#   3. Papan mustahil                     -> BFS mengembalikan -1
+# Covers 3 test scenarios:
+#   1. Empty board (no snakes or ladders) -> at least 17 throws
+#   2. Board with ladders/snakes          -> uses ladders, avoids snakes
+#   3. Impossible board                   -> BFS returns -1
 
 import sys
 import os
 import unittest
 
-# Tambahkan root project ke sys.path agar bisa import solver & board
+# Add the project root to sys.path so solver & board can be imported
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from solver import bfs
@@ -18,12 +17,12 @@ from solver import bfs
 
 class TestBFSEmptyBoard(unittest.TestCase):
     """
-    Skenario 1: Papan kosong — tanpa ular dan tangga.
+    Scenario 1: Empty board — no snakes and no ladders.
 
-    Pada papan kosong, setiap lemparan paling banyak maju 6 kotak.
-    Dari kotak 1 ke kotak 100 ada jarak 99 kotak.
-    Minimum secara teoretis: ceil(99/6) = 17 lemparan.
-    BFS harus menemukan tepat 17 lemparan.
+    On an empty board, each throw moves at most 6 squares.
+    From square 1 to square 100 is a distance of 99 squares.
+    Theoretical minimum: ceil(99/6) = 17 throws.
+    BFS must find exactly 17 throws.
     """
 
     def setUp(self):
@@ -31,113 +30,112 @@ class TestBFSEmptyBoard(unittest.TestCase):
         self.empty_snakes = {}
 
     def test_empty_board_minimum_throws(self):
-        """BFS di papan kosong harus membutuhkan tepat 17 lemparan."""
+        """BFS on an empty board must need exactly 17 throws."""
         throws, path = bfs(start=1, ladders=self.empty_ladders, snakes=self.empty_snakes)
         self.assertEqual(
             throws, 17,
-            f"Papan kosong harus butuh 17 lemparan, tapi BFS mengembalikan {throws}"
+            f"An empty board must need 17 throws, but BFS returned {throws}"
         )
 
     def test_empty_board_path_starts_and_ends_correctly(self):
-        """Jalur BFS di papan kosong harus mulai di kotak 1 dan berakhir di kotak 100."""
+        """The BFS path on an empty board must start at square 1 and end at square 100."""
         throws, path = bfs(start=1, ladders=self.empty_ladders, snakes=self.empty_snakes)
-        self.assertEqual(path[0], 1, "Jalur harus dimulai dari kotak 1")
-        self.assertEqual(path[-1], 100, "Jalur harus berakhir di kotak 100")
-        # Panjang jalur = jumlah lemparan + 1 (kotak awal ikut dihitung)
+        self.assertEqual(path[0], 1, "The path must start at square 1")
+        self.assertEqual(path[-1], 100, "The path must end at square 100")
+        # Path length = number of throws + 1 (the starting square is included)
         self.assertEqual(len(path), throws + 1)
 
 
 class TestBFSWithLaddersAndSnakes(unittest.TestCase):
     """
-    Skenario 2: Papan dengan tangga dan ular.
+    Scenario 2: Board with ladders and snakes.
 
-    Tangga mempersingkat perjalanan (BFS memanfaatkannya).
-    Ular mengharuskan BFS menghindari kotak kepala ular.
+    Ladders shorten the trip (BFS takes advantage of them).
+    Snakes require BFS to avoid the snake head squares.
 
-    Papan percobaan:
-      LADDERS = {4: 50, 60: 90}  — tangga besar dari kotak 4 ke 50, lalu 60 ke 90
-      SNAKES  = {80: 10}         — ular dari kotak 80 ke 10 (dihindari)
+    Test board:
+      LADDERS = {4: 50, 60: 90}  — big ladders from square 4 to 50, and 60 to 90
+      SNAKES  = {80: 10}         — snake from square 80 to 10 (to be avoided)
 
-    Ekspektasi: BFS menemukan jalur yang memanfaatkan tangga, bukan lewat kepala ular.
+    Expected: BFS finds a path that uses the ladders, not one through the snake head.
     """
 
     def setUp(self):
-        # Tangga: 4->50 dan 60->90
+        # Ladders: 4->50 and 60->90
         self.ladders = {4: 50, 60: 90}
-        # Ular: 80->10
+        # Snake: 80->10
         self.snakes = {80: 10}
 
     def test_path_uses_ladder(self):
-        """BFS harus memanfaatkan tangga dalam jalurnya."""
+        """BFS must use a ladder in its path."""
         throws, path = bfs(start=1, ladders=self.ladders, snakes=self.snakes)
 
-        # Pastikan kotak 100 bisa dicapai
-        self.assertNotEqual(throws, -1, "Kotak 100 seharusnya bisa dicapai")
-        self.assertEqual(path[-1], 100, "Jalur harus berakhir di kotak 100")
+        # Make sure square 100 can be reached
+        self.assertNotEqual(throws, -1, "Square 100 should be reachable")
+        self.assertEqual(path[-1], 100, "The path must end at square 100")
 
-        # Jika melewati kotak 4 (kaki tangga), posisi berikutnya harus 50
-        # Jika melewati kotak 60 (kaki tangga), posisi berikutnya harus 90
+        # If the path passes square 4 (ladder foot), the next position must be 50
+        # If the path passes square 60 (ladder foot), the next position must be 90
         for i in range(len(path) - 1):
             if path[i] == 50:
-                # Berarti sebelumnya di kotak 4 (kaki tangga), lompat ke 50
-                # Verifikasi: 50 ada di path dan merupakan hasil dari tangga 4->50
+                # This means the previous square was 4 (ladder foot), jumping to 50
+                # Check: 50 is in the path and comes from the 4->50 ladder
                 pass
-        # Verifikasi bahwa 50 ada di jalur (hasil naik tangga 4->50)
-        self.assertIn(50, path, "Jalur harus melewati kotak 50 (puncak tangga dari 4)")
+        # Check that 50 is in the path (result of climbing the 4->50 ladder)
+        self.assertIn(50, path, "The path must pass square 50 (top of the ladder from 4)")
 
     def test_path_avoids_snake(self):
-        """BFS tidak boleh melewati kepala ular (kotak 80) dalam jalur optimalnya."""
+        """BFS must not pass through the snake head (square 80) in its optimal path."""
         throws, path = bfs(start=1, ladders=self.ladders, snakes=self.snakes)
-        # Kepala ular di kotak 80 membuat mundur ke 10 — jalur optimal seharusnya
-        # tidak mendarat di kotak 80
-        self.assertNotIn(80, path, "Jalur optimal tidak boleh melewati kepala ular di kotak 80")
+        # The snake head on square 80 sends the token back to 10 — the optimal path
+        # should not land on square 80
+        self.assertNotIn(80, path, "The optimal path must not pass the snake head on square 80")
 
     def test_fewer_throws_than_empty_board(self):
         """
-        Dengan adanya tangga besar, BFS harus bisa selesai dalam lebih
-        sedikit lemparan dibandingkan papan kosong (17).
+        With big ladders, BFS must finish in fewer
+        throws than on an empty board (17).
         """
         throws, path = bfs(start=1, ladders=self.ladders, snakes=self.snakes)
         self.assertLess(
             throws, 17,
-            f"Dengan tangga besar, BFS seharusnya < 17 lemparan, tapi {throws}"
+            f"With big ladders, BFS should need < 17 throws, but got {throws}"
         )
 
 
 class TestBFSImpossibleBoard(unittest.TestCase):
     """
-    Skenario 3: Papan mustahil (unreachable).
+    Scenario 3: Impossible (unreachable) board.
 
-    Strategi: Semua kotak 94–99 (6 kotak sebelum 100) adalah kepala ular
-    yang menarik mundur ke belakang kotak 94. Dengan demikian, dari kotak
-    manapun di kisaran 88–93, lemparan 1–6 selalu mendarat di 94–99
-    (kepala ular) atau di kotak > 100 (tidak bergerak), sehingga kotak 100
-    tidak pernah bisa dicapai tepat.
+    Strategy: every square from 94 to 99 (the 6 squares before 100) is a snake
+    head that pulls the token back behind square 94. So from any square in the
+    range 88–93, a throw of 1–6 always lands on 94–99 (snake head) or on a
+    square > 100 (no movement), so square 100 can never be reached exactly.
 
-    Konfigurasi konkret:
-      Kotak 94: ular ke 2  (mundur jauh)
-      Kotak 95: ular ke 2
-      Kotak 96: ular ke 2
-      Kotak 97: ular ke 2
-      Kotak 98: ular ke 2
-      Kotak 99: ular ke 2
+    Concrete configuration:
+      Square 94: snake to 2  (far back)
+      Square 95: snake to 2
+      Square 96: snake to 2
+      Square 97: snake to 2
+      Square 98: snake to 2
+      Square 99: snake to 2
 
-    Dari kotak 93 kebawah:
-      - Lempar 7+ : tidak bergerak (melewati 100)   — tidak ada dadu 7+
-      - Lempar 1 : ke 94 -> ular -> ke 2
-      - Lempar 2 : ke 95 -> ular -> ke 2
-      - Lempar 3 : ke 96 -> ular -> ke 2
-      - Lempar 4 : ke 97 -> ular -> ke 2
-      - Lempar 5 : ke 98 -> ular -> ke 2
-      - Lempar 6 : ke 99 -> ular -> ke 2
+    From square 93 and below:
+      - Throw 7+ : no movement (past 100)          — no die shows 7+
+      - Throw 1  : to 94 -> snake -> to 2
+      - Throw 2  : to 95 -> snake -> to 2
+      - Throw 3  : to 96 -> snake -> to 2
+      - Throw 4  : to 97 -> snake -> to 2
+      - Throw 5  : to 98 -> snake -> to 2
+      - Throw 6  : to 99 -> snake -> to 2
 
-    Maka dari kotak 93 tidak bisa mencapai 100.
-    Pastikan semua kotak yang bisa dicapai juga tidak bisa mencapai 93 tanpa
-    akhirnya terjebak. Kita cukup tes bahwa BFS mengembalikan -1.
+    So square 100 cannot be reached from square 93.
+    Every reachable square also cannot get past 93 without eventually
+    being trapped. It is enough to test that BFS returns -1.
     """
 
     def setUp(self):
-        # 6 kotak sebelum 100 semuanya kepala ular yang mundur jauh
+        # The 6 squares before 100 are all snake heads that go far back
         self.impossible_snakes = {
             94: 2,
             95: 2,
@@ -149,7 +147,7 @@ class TestBFSImpossibleBoard(unittest.TestCase):
         self.empty_ladders = {}
 
     def test_impossible_board_returns_minus_one(self):
-        """BFS harus mengembalikan -1 jika kotak 100 tidak bisa dicapai."""
+        """BFS must return -1 if square 100 cannot be reached."""
         throws, path = bfs(
             start=1,
             ladders=self.empty_ladders,
@@ -157,11 +155,11 @@ class TestBFSImpossibleBoard(unittest.TestCase):
         )
         self.assertEqual(
             throws, -1,
-            "Papan mustahil harus mengembalikan -1 sebagai jumlah lemparan"
+            "An impossible board must return -1 as the number of throws"
         )
 
     def test_impossible_board_returns_empty_path(self):
-        """BFS harus mengembalikan [] sebagai jalur jika kotak 100 tidak bisa dicapai."""
+        """BFS must return [] as the path if square 100 cannot be reached."""
         throws, path = bfs(
             start=1,
             ladders=self.empty_ladders,
@@ -169,7 +167,7 @@ class TestBFSImpossibleBoard(unittest.TestCase):
         )
         self.assertEqual(
             path, [],
-            "Papan mustahil harus mengembalikan jalur kosong []"
+            "An impossible board must return an empty path []"
         )
 
 

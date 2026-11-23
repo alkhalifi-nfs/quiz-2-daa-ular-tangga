@@ -1,8 +1,8 @@
-# solver.py — Algoritma BFS (Breadth-First Search)
+# solver.py — Breadth-First Search (BFS) algorithm
 #
-# bfs(start, ladders, snakes) -> (jumlah_lemparan_minimum, jalur)
-#       * jalur = daftar kotak yang dilewati, misal [1, 14, 22, 84, ..., 100]
-#       * jika kotak 100 tidak bisa dicapai -> (-1, [])
+# bfs(start, ladders, snakes) -> (minimum_throws, path)
+#       * path = squares visited, e.g. [1, 14, 22, 84, ..., 100]
+#       * if square 100 cannot be reached -> (-1, [])
 
 from collections import deque
 

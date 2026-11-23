@@ -1,13 +1,12 @@
-# game.py — Logika permainan (giliran, dadu, pemenang)
-# Penanggung jawab: Dheva (Anggota 2)
+# game.py — Game logic (turns, dice, winner)
 #
 # class Game
-#   * positions   : posisi tiap pemain, misal [1, 1]
-#   * turn        : indeks pemain yang sedang jalan (0 atau 1)
-#   * last_dice   : angka dadu terakhir (1-6), None sebelum ada lemparan
-#   * winner      : indeks pemenang, atau None kalau belum ada
-#   * roll()      : lempar dadu acak 1-6, gerakkan pemain, ganti giliran
-#   * throws_of(player) : jumlah lemparan pemain 0 atau 1
+#   * positions   : position of each player, e.g. [1, 1]
+#   * turn        : index of the player whose turn it is (0 or 1)
+#   * last_dice   : last dice value (1-6), None before the first throw
+#   * winner      : index of the winner, or None if there is no winner yet
+#   * roll()      : roll a random die (1-6), move the player, switch turns
+#   * throws_of(player) : number of throws made by player 0 or 1
 
 import random
 from board import SIZE, LADDERS, SNAKES, move
@@ -15,74 +14,74 @@ from board import SIZE, LADDERS, SNAKES, move
 
 class Game:
     """
-    Kelas yang mengelola logika permainan Ular Tangga 2 pemain.
+    Manages the game logic for two-player Snakes and Ladders.
 
-    Aturan:
-    - Papan 1–100; kedua pemain mulai di kotak 1.
-    - Dadu bernilai acak 1–6.
-    - Pemain harus berhenti TEPAT di kotak 100 untuk menang
-      (jika melampaui 100, posisi tidak berubah — ditangani oleh move()).
-    - Pemain bergantian; setelah satu roll, giliran pindah ke pemain lain
-      kecuali jika pemain tersebut baru saja menang.
+    Rules:
+    - Board squares 1–100; both players start on square 1.
+    - The die gives a random value from 1 to 6.
+    - A player must land EXACTLY on square 100 to win
+      (if the roll goes past 100, the position does not change — handled by move()).
+    - Players take turns; after one roll, the turn passes to the other player
+      unless that player has just won.
     """
 
     def __init__(self):
-        # Posisi awal kedua pemain di kotak 1
+        # Both players start on square 1
         self.positions = [1, 1]
 
-        # Giliran pertama adalah pemain 0
+        # Player 0 goes first
         self.turn = 0
 
-        # Belum ada lemparan dadu
+        # No die has been thrown yet
         self.last_dice = None
 
-        # Belum ada pemenang
+        # No winner yet
         self.winner = None
 
-        # Hitung berapa kali masing-masing pemain sudah melempar dadu
+        # Number of throws made by each player
         self._throws = [0, 0]
 
     def roll(self):
         """
-        Melempar dadu untuk pemain yang sedang giliran (self.turn):
-        1. Jika permainan sudah selesai (winner sudah ada), tidak melakukan apa-apa.
-        2. Lempar dadu acak 1–6, simpan ke self.last_dice.
-        3. Tambah hitungan lemparan pemain aktif.
-        4. Pindahkan posisi pemain aktif menggunakan move() dari board.py.
-        5. Cek apakah pemain mencapai kotak 100:
-           - Jika ya, set self.winner = self.turn (permainan selesai).
-           - Jika tidak, ganti self.turn ke pemain berikutnya (0 <-> 1).
+        Roll the die for the current player (self.turn):
+        1. If the game is already over (there is a winner), do nothing.
+        2. Roll a random die (1–6) and store it in self.last_dice.
+        3. Increase the current player's throw count.
+        4. Move the current player using move() from board.py.
+        5. Check whether the player reached square 100:
+           - If so, set self.winner = self.turn (game over).
+           - Otherwise, pass the turn to the other player (0 <-> 1).
         """
-        # Jangan lakukan apa-apa jika permainan sudah selesai
+        # Do nothing if the game is already over
         if self.winner is not None:
             return
 
-        # Lempar dadu (1–6)
+        # Roll the die (1–6)
         dice = random.randint(1, 6)
         self.last_dice = dice
 
-        # Tambah hitungan lemparan pemain aktif
+        # Increase the current player's throw count
         self._throws[self.turn] += 1
 
-        # Gerakkan pemain aktif
+        # Move the current player
         current = self.turn
         self.positions[current] = move(self.positions[current], dice)
 
-        # Cek apakah pemain aktif menang
+        # Check whether the current player has won
         if self.positions[current] == SIZE:
             self.winner = current
         else:
-            # Ganti giliran ke pemain berikutnya
+            # Pass the turn to the other player
             self.turn = 1 - self.turn
 
     def throws_of(self, player):
         """
-        Mengembalikan berapa kali `player` (0 atau 1) sudah melempar dadu.
+        Return how many times `player` (0 or 1) has thrown the die.
 
-        Parameter:
-            player : 0 (pemain 1) atau 1 (pemain 2)
+        Parameters:
+            player : 0 (player 1) or 1 (player 2)
 
-        Return:
-            int — jumlah lemparan dadu pemain tersebut
+        Returns:
+            int — the number of throws made by that player
         """
         return self._throws[player]

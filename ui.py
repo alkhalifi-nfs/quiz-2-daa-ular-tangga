@@ -71,7 +71,7 @@ def circle(screen, color, center, r):
 def cell_center(n):
     row = (n - 1) // COLS
     col = (n - 1) % COLS
-    # papan zig-zag: baris ganjil (dari bawah) dibaca kanan ke kiri
+    # zig-zag board: odd rows (counted from the bottom) run right to left
     if row % 2 == 1:
         col = COLS - 1 - col
     x = BOARD_X + col * CELL + CELL // 2
@@ -154,7 +154,7 @@ _board_cache = None
 
 
 def draw_board(screen):
-    # papan statis, jadi cukup digambar sekali lalu dipakai ulang tiap frame
+    # the board is static, so draw it once and reuse it every frame
     global _board_cache
     if _board_cache is None:
         _board_cache = pygame.Surface((WINDOW_W, WINDOW_H), pygame.SRCALPHA)

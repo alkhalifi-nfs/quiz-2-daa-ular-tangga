@@ -1,147 +1,99 @@
-# Ular Tangga BFS
+# Snakes and Ladders BFS
 
-Game Ular Tangga sederhana untuk 2 pemain, dibuat dengan Python + Pygame.
-Program ini juga memakai algoritma **BFS (Breadth-First Search)** untuk menghitung
-**jumlah lemparan dadu paling sedikit** dari kotak 1 ke kotak 100.
+A two-player Snakes and Ladders game built with Python and Pygame. The game uses
+**Breadth-First Search (BFS)** to find the **minimum number of dice throws** needed
+to reach square 100, and can show that fastest route on the board at any time.
 
-> Quiz 2 — EF234405 Design & Analysis of Algorithms (M)
+> Quiz 2: EF234405 Design & Analysis of Algorithms (M)
 
-## Aturan main
+## Features
 
-1. Papan 10×10, kotak 1 sampai 100. Kedua pemain mulai di kotak 1.
-2. Pemain bergantian menekan **SPASI** untuk melempar dadu (1–6).
-3. Kalau pion berhenti di **kaki tangga**, pion naik ke puncaknya.
-   Kalau pion berhenti di **kepala ular**, pion turun ke ekornya.
-4. Pemain harus berhenti **tepat** di kotak 100. Kalau angka dadu membuat pion
-   melewati 100, pion tidak bergerak.
-5. Pemain pertama yang sampai di kotak 100 menang.
-6. Tekan **B** untuk menampilkan jalur tercepat hasil BFS di papan.
+- 10×10 board with 8 ladders and 8 snakes, for 2 players.
+- Animated dice roll and token movement.
+- **Fastest route (BFS):** press **B** to show the shortest path from the current
+  player's square to square 100, with the dice value needed for each step.
+- **End screen:** compares the winner's number of throws with the BFS minimum.
 
-## Struktur proyek
+## Rules
 
-```
-ular-tangga/
-├── board.py            data papan (ular, tangga) + aturan gerak pion
-├── solver.py           algoritma BFS
-├── game.py             logika permainan: giliran, dadu, pemenang
-├── ui.py               fungsi-fungsi untuk menggambar di layar (Pygame)
-├── main.py             file yang dijalankan; berisi loop utama game
-├── tests/
-│   └── test_solver.py  unit test untuk BFS
-├── requirements.txt    daftar library yang perlu di-install (pygame)
-├── .gitignore          file/folder yang tidak ikut di-upload ke GitHub
-└── README.md           dokumen ini
-```
+1. Both players start on square 1 and take turns rolling a die (1–6).
+2. Landing on the **foot of a ladder** moves the token up to its top.
+   Landing on the **head of a snake** moves the token down to its tail.
+3. A player must land **exactly** on square 100. If the roll would go past 100,
+   the token does not move.
+4. The first player to reach square 100 wins.
 
-Alur ketergantungan antarfile:
+## Getting started
 
-```
-board.py  ──►  solver.py
-    │              │
-    └──►  game.py ◄┘
-              │
-              ▼
-     ui.py  ──►  main.py
-```
-
-`board.py` adalah fondasi, jadi file ini dikerjakan **paling pertama**.
-
-## Cara menjalankan
+Requires Python 3.10 or newer.
 
 ```bash
+python -m venv .venv
+# Windows:      .venv\Scripts\activate
+# Linux/macOS:  source .venv/bin/activate
 pip install -r requirements.txt
-python main.py                          # main game
-python -m unittest discover tests -v    # jalankan unit test
+python main.py
 ```
 
----
+### Controls
 
-## Pembagian tugas
+| Key | Action |
+|-----|--------|
+| `Space` | Roll the die |
+| `B` | Show or hide the BFS fastest route |
+| `R` | Restart the game |
+| `Esc` | Quit |
 
-Setiap anggota mengerjakan file miliknya sendiri, lalu **commit & push sendiri**,
-karena kontribusi dinilai dari riwayat commit di GitHub.
+The buttons in the side panel can also be clicked with the mouse.
 
-Bagian "kontrak" di bawah menjelaskan nama fungsi, input, dan outputnya. Selama
-kontrak ini dipatuhi, setiap anggota bisa bekerja tanpa menunggu kode anggota lain
-selesai seluruhnya.
-
-### Anggota 1 — Nafis: `board.py` + `solver.py` (dikerjakan pertama)
-
-- [ ] `board.py`: konstanta `SIZE`, `LADDERS`, `SNAKES`
-- [ ] `board.py`: fungsi `move(pos, dice, ladders=LADDERS, snakes=SNAKES)`
-- [ ] `solver.py`: fungsi `bfs(start=1, ladders=LADDERS, snakes=SNAKES)`
-- [ ] Komentar yang menjelaskan cara kerja BFS (untuk bahan laporan)
-
-Kontrak:
-
-```python
-SIZE = 100
-LADDERS = {4: 14, 9: 31, ...}   # {kaki: puncak}
-SNAKES  = {17: 7, 62: 19, ...}  # {kepala: ekor}
-
-move(pos, dice)  # -> int, posisi setelah lemparan
-# contoh: move(1, 3) == 14   (1+3 = 4, ada tangga 4 -> 14)
-#         move(98, 5) == 98  (lewat 100, tidak bergerak)
-
-bfs(start=1)     # -> (jumlah_lemparan_minimum, jalur)
-# contoh: (7, [1, 14, 16, 22, 84, 88, 94, 100])
-#         kalau 100 tidak bisa dicapai: (-1, [])
-```
-
-### Anggota 2 — Dheva: `game.py` + `tests/test_solver.py`
-
-Mulai setelah `move()` di `board.py` sudah di-push.
-
-- [ ] `game.py`: class `Game` dengan atribut `positions`, `turn`, `last_dice`, `winner`
-- [ ] `game.py`: method `roll()` untuk melempar dadu acak, memindahkan pemain
-      dengan `move()`, mengecek pemenang, lalu mengganti giliran
-- [ ] `game.py`: method `throws_of(player)` yang mengembalikan berapa kali pemain itu sudah melempar
-- [ ] `tests/test_solver.py`: minimal 3 test untuk `bfs()` (papan kosong = 17 lemparan,
-      papan dengan ular/tangga, dan papan mustahil = -1)
-
-Kontrak:
-
-```python
-game = Game()          # 2 pemain, semua mulai di kotak 1
-game.positions         # [1, 1]
-game.turn              # 0 = giliran pemain 1, 1 = giliran pemain 2
-game.roll()            # lempar dadu untuk pemain yang sedang jalan
-game.last_dice         # angka dadu terakhir (1-6), None kalau belum melempar
-game.winner            # None, atau 0/1 kalau sudah ada pemenang
-game.throws_of(0)      # berapa kali pemain 1 sudah melempar
-```
-
-### Anggota 3 — Yuwand: `ui.py` + `main.py`
-
-Menggambar papan bisa langsung dimulai setelah `LADDERS` dan `SNAKES` di
-`board.py` sudah di-push. Bagian pion bisa dimulai setelah `Game` selesai.
-
-- [ ] `ui.py`: `draw_board(screen)` untuk menggambar 100 kotak bernomor (urutan zig-zag),
-      tangga (garis cokelat), dan ular (garis hijau/merah)
-- [ ] `ui.py`: `draw_players(screen, game)` untuk menggambar pion (lingkaran berwarna)
-- [ ] `ui.py`: `draw_info(screen, game)` untuk menampilkan giliran siapa, angka dadu, dan pemenang
-- [ ] `ui.py`: `draw_path(screen, path)` untuk menggambar jalur BFS sebagai garis
-- [ ] `main.py`: membuka jendela Pygame dan menjalankan loop utama
-      (SPASI = lempar dadu, B = tampilkan/sembunyikan jalur BFS)
-- [ ] Saat permainan selesai, tampilkan perbandingan: "Pemenang butuh X lemparan,
-      BFS minimal Y lemparan"
-
-### Bersama-sama
-
-- [ ] Laporan (Report.pdf): desain, implementasi, evaluasi, kesimpulan
-- [ ] Declaration.pdf yang sudah ditandatangani
-- [ ] Mencoba game sampai selesai dan memperbaiki bug
-
-## Cara kerja bareng di Git
+### Running the tests
 
 ```bash
-git pull                     # SELALU ambil perubahan terbaru sebelum mulai kerja
-# ... edit file milikmu ...
-git add board.py
-git commit -m "Tambah data tangga dan ular"
-git push
+python -m unittest discover tests -v
 ```
 
-Tips:
-- Commit sedikit-sedikit dengan pesan yang jelas. Jangan sekaligus satu commit besar di akhir.
-- Edit hanya file milikmu sendiri supaya tidak terjadi konflik.
+## How BFS is used
+
+The board is modeled as a directed graph:
+
+| Element | Meaning |
+|---------|---------|
+| Node | A square from 1 to 100 |
+| Edge | One die throw: from square `p` to `move(p, d)` for `d` = 1…6. If `p + d` is a ladder foot or snake head, the edge goes straight to its other end. |
+| Weight | Every edge costs 1 throw |
+
+Since every edge has the same weight, the minimum number of throws is the
+shortest path in an unweighted graph, which BFS finds directly. BFS visits squares
+layer by layer using a FIFO queue, so the first time a square is reached, its
+distance is already the minimum. The path is rebuilt by following the `parent`
+array back from square 100. If square 100 can never be reached, `bfs()` returns
+`(-1, [])`.
+
+| | Complexity |
+|---|---|
+| Time | O(V + E), with V = 100 and E ≤ 600 |
+| Memory | O(V) for the `dist` and `parent` arrays and the queue |
+
+On the default board, BFS finds that square 100 can be reached in **7 throws**:
+`1 → 14 → 16 → 22 → 84 → 88 → 94 → 100`.
+
+## Project structure
+
+```
+├── board.py            board data (ladders, snakes) and movement rules
+├── solver.py           BFS: minimum throws and shortest path
+├── game.py             game logic: turns, dice, winner
+├── ui.py               Pygame drawing functions
+├── main.py             entry point and main game loop
+├── tests/
+│   └── test_solver.py  unit tests for BFS
+└── requirements.txt    dependencies (pygame)
+```
+
+## Team
+
+| Member | Responsibility |
+|--------|----------------|
+| M. Nafis Al Khalifi | `board.py`, `solver.py` (BFS) |
+| Dheva Alvian A. E. | `game.py`, unit tests |
+| Yuwand Arteta H. W. P. | `ui.py`, `main.py` |
