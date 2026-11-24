@@ -28,6 +28,7 @@ CELL_B = (255, 233, 194)
 CELL_LADDER = (215, 245, 225)
 CELL_SNAKE = (255, 220, 221)
 CELL_GOAL = (255, 210, 77)
+GRID_LINE = (196, 160, 104)
 
 RAIL = (138, 90, 34)
 RUNG = (201, 138, 60)
@@ -43,7 +44,7 @@ GOLD = (255, 210, 77)
 
 PLAYER_COLORS = [(47, 107, 255), (255, 138, 31)]
 PLAYER_SHADE = [(28, 71, 194), (204, 102, 10)]
-PLAYER_NAMES = ["Pemain 1", "Pemain 2"]
+PLAYER_NAMES = ["Player 1", "Player 2"]
 
 _fonts = {}
 
@@ -77,6 +78,10 @@ def cell_center(n):
     x = BOARD_X + col * CELL + CELL // 2
     y = BOARD_Y + BOARD_PX - (row * CELL + CELL // 2)
     return x, y
+
+
+def throws_text(n):
+    return "%d throw%s" % (n, "" if n == 1 else "s")
 
 
 def dice_for_path(path):
@@ -180,6 +185,12 @@ def _render_board(screen):
         pygame.draw.rect(screen, color, rect)
         text(screen, n, 13, NUM, (rect.x + 5, rect.y + 3), bold=True)
 
+    for i in range(COLS + 1):
+        x = BOARD_X + i * CELL
+        y = BOARD_Y + i * CELL
+        pygame.draw.line(screen, GRID_LINE, (x, BOARD_Y), (x, BOARD_Y + BOARD_PX), 2)
+        pygame.draw.line(screen, GRID_LINE, (BOARD_X, y), (BOARD_X + BOARD_PX, y), 2)
+
     for foot, top in LADDERS.items():
         _draw_ladder(screen, foot, top)
     for i, (head, tail) in enumerate(SNAKES.items()):
@@ -279,10 +290,10 @@ class Button:
 
 def make_buttons():
     return {
-        "roll": Button((PANEL_X, 156, PANEL_W, 52), "Lempar Dadu", "SPASI", primary=True),
-        "path": Button((PANEL_X, 222, (PANEL_W - 10) // 2, 40), "Jalur BFS", "B"),
-        "reset": Button((PANEL_X + (PANEL_W + 10) // 2, 222, (PANEL_W - 10) // 2, 40), "Ulang", "R"),
-        "again": Button((BOARD_X + 150, BOARD_Y + 400, 300, 48), "Main Lagi", "R", primary=True),
+        "roll": Button((PANEL_X, 156, PANEL_W, 52), "Roll Dice", "SPACE", primary=True),
+        "path": Button((PANEL_X, 222, (PANEL_W - 10) // 2, 40), "BFS Path", "B"),
+        "reset": Button((PANEL_X + (PANEL_W + 10) // 2, 222, (PANEL_W - 10) // 2, 40), "Restart", "R"),
+        "again": Button((BOARD_X + 150, BOARD_Y + 400, 300, 48), "Play Again", "R", primary=True),
     }
 
 
@@ -295,7 +306,7 @@ def _card(screen, rect, border=None):
 def draw_panel(screen, game, view, buttons, mouse):
     pygame.draw.rect(screen, BG, (PANEL_X - 10, 0, PANEL_W + 30, WINDOW_H))
 
-    text(screen, "Ular Tangga", 30, TEXT, (PANEL_X, 14), bold=True)
+    text(screen, "Snakes & Ladders", 24, TEXT, (PANEL_X, 14), bold=True)
     badge = font(12, True).render("BFS Solver", True, PATH_TEXT)
     brect = pygame.Rect(0, 0, badge.get_width() + 20, 24)
     brect.topright = (PANEL_X + PANEL_W, 24)
@@ -308,13 +319,13 @@ def draw_panel(screen, game, view, buttons, mouse):
     draw_dice(screen, view["dice_face"], dice_rect)
     tx = dice_rect.right + 16
     if view["winner"] is None:
-        text(screen, "Giliran", 13, MUTED, (tx, turn_card.y + 10), bold=True)
+        text(screen, "Turn", 13, MUTED, (tx, turn_card.y + 10), bold=True)
         text(screen, PLAYER_NAMES[view["turn"]], 26, PLAYER_COLORS[view["turn"]], (tx, turn_card.y + 26), bold=True)
         last = "-" if game.last_dice is None else game.last_dice
-        text(screen, "Dadu terakhir: %s" % last, 13, MUTED, (tx, turn_card.y + 58))
+        text(screen, "Last roll: %s" % last, 13, MUTED, (tx, turn_card.y + 58))
     else:
-        text(screen, "Permainan selesai", 13, MUTED, (tx, turn_card.y + 14), bold=True)
-        text(screen, "Ada pemenang!", 24, GOLD, (tx, turn_card.y + 32), bold=True)
+        text(screen, "Game over", 13, MUTED, (tx, turn_card.y + 14), bold=True)
+        text(screen, "We have a winner!", 22, GOLD, (tx, turn_card.y + 32), bold=True)
 
     busy = view["busy"]
     buttons["roll"].draw(screen, mouse, enabled=not busy and view["winner"] is None)
@@ -328,14 +339,14 @@ def draw_panel(screen, game, view, buttons, mouse):
         _card(screen, card, PLAYER_COLORS[p] if active else None)
         circle(screen, PLAYER_COLORS[p], (card.x + 20, card.y + 19), 7)
         text(screen, PLAYER_NAMES[p], 15, TEXT, (card.x + 34, card.y + 9), bold=True)
-        text(screen, "%d lemparan" % game.throws_of(p), 13, MUTED, (card.right - 14, card.y + 11), anchor="topright")
+        text(screen, throws_text(game.throws_of(p)), 13, MUTED, (card.right - 14, card.y + 11), anchor="topright")
         pos = view["shown_pos"][p]
         bar = pygame.Rect(card.x + 14, card.y + 40, PANEL_W - 110, 8)
         pygame.draw.rect(screen, CARD_LINE, bar, border_radius=4)
         fill = bar.copy()
         fill.w = max(8, int(bar.w * pos / SIZE))
         pygame.draw.rect(screen, PLAYER_COLORS[p], fill, border_radius=4)
-        text(screen, "Kotak %d" % pos, 13, TEXT, (card.right - 14, card.y + 35), bold=True, anchor="topright")
+        text(screen, "Square %d" % pos, 13, TEXT, (card.right - 14, card.y + 35), bold=True, anchor="topright")
         y += 72
 
     _draw_bfs_card(screen, game, view, pygame.Rect(PANEL_X, y, PANEL_W, WINDOW_H - 20 - y))
@@ -344,17 +355,18 @@ def draw_panel(screen, game, view, buttons, mouse):
 def _draw_bfs_card(screen, game, view, rect):
     _card(screen, rect, PATH_SOFT)
     x, y = rect.x + 14, rect.y + 12
-    text(screen, "Rute tercepat (BFS)", 14, PATH_TEXT, (x, y), bold=True)
+    text(screen, "Shortest route (BFS)", 14, PATH_TEXT, (x, y), bold=True)
 
     if view["winner"] is not None:
-        text(screen, "Pemenang butuh %d lemparan." % game.throws_of(view["winner"]), 14, TEXT, (x, y + 30), bold=True)
-        text(screen, "Minimum hasil BFS: %d lemparan." % view["min_throws"], 14, MUTED, (x, y + 54))
+        text(screen, "Winner needed %s." % throws_text(game.throws_of(view["winner"])), 14, TEXT, (x, y + 30), bold=True)
+        text(screen, "BFS minimum: %s." % throws_text(view["min_throws"]), 14, MUTED, (x, y + 54))
         return
 
-    text(screen, "dari kotak %d" % view["path_start"], 12, MUTED, (rect.right - 14, y + 2), anchor="topright")
+    text(screen, "from square %d" % view["path_start"], 12, MUTED, (rect.right - 14, y + 2), anchor="topright")
     steps = view["steps"]
-    text(screen, "%d lemparan" % len(steps), 15, TEXT, (x, y + 26), bold=True)
-    text(screen, "lagi ke kotak 100", 13, MUTED, (x + font(15, True).size("%d lemparan" % len(steps))[0] + 6, y + 28))
+    count = throws_text(len(steps))
+    text(screen, count, 15, TEXT, (x, y + 26), bold=True)
+    text(screen, "left to reach square 100", 13, MUTED, (x + font(15, True).size(count)[0] + 6, y + 28))
 
     gap = 5
     w = (rect.w - 28 - gap * 6) // 7
@@ -367,7 +379,7 @@ def _draw_bfs_card(screen, game, view, rect):
         mark = ("^%d" if ladder else "%d") % dest
         text(screen, mark, 11, LADDER_TEXT if ladder else PATH_TEXT, (chip.centerx, chip.bottom - 4), bold=True, anchor="midbottom")
 
-    text(screen, "Angka besar = dadu yang dibutuhkan, ^ = naik tangga", 11, MUTED, (x, cy + 66))
+    text(screen, "Big number = dice needed, ^ = ladder climb", 11, MUTED, (x, cy + 66))
 
 
 def draw_winner(screen, game, min_throws, buttons, mouse):
@@ -383,11 +395,11 @@ def draw_winner(screen, game, min_throws, buttons, mouse):
     circle(screen, GOLD, (card.centerx, card.y + 46), 32)
     circle(screen, PLAYER_COLORS[w], (card.centerx, card.y + 46), 26)
     text(screen, w + 1, 28, TEXT, (card.centerx, card.y + 46), bold=True, anchor="center")
-    text(screen, "%s Menang!" % PLAYER_NAMES[w], 32, PLAYER_COLORS[w], (card.centerx, card.y + 88), bold=True, anchor="midtop")
+    text(screen, "%s Wins!" % PLAYER_NAMES[w], 32, PLAYER_COLORS[w], (card.centerx, card.y + 88), bold=True, anchor="midtop")
 
     throws = game.throws_of(w)
     for i, (label, value, bg, fg) in enumerate([
-            ("Lemparan pemenang", throws, (242, 244, 250), (27, 30, 43)),
+            ("Winner's throws", throws, (242, 244, 250), (27, 30, 43)),
             ("Minimum BFS", min_throws, (238, 232, 255), PATH)]):
         box = pygame.Rect(card.x + 24 + i * 162, card.y + 140, 150, 66)
         pygame.draw.rect(screen, bg, box, border_radius=12)
@@ -395,7 +407,7 @@ def draw_winner(screen, game, min_throws, buttons, mouse):
         text(screen, value, 28, fg, (box.centerx, box.y + 26), bold=True, anchor="midtop")
 
     extra = throws - min_throws
-    msg = "Sama dengan rute tercepat!" if extra <= 0 else "%d lemparan lebih banyak dari rute tercepat." % extra
+    msg = "Matched the shortest route!" if extra <= 0 else "%s more than the shortest route." % throws_text(extra)
     text(screen, msg, 13, (91, 97, 120), (card.centerx, card.y + 216), anchor="midtop")
 
     buttons["again"].rect.midbottom = (card.centerx, card.bottom - 18)

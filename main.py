@@ -162,7 +162,7 @@ class App:
 def main():
     pygame.init()
     screen = pygame.display.set_mode((ui.WINDOW_W, ui.WINDOW_H))
-    pygame.display.set_caption("Ular Tangga BFS")
+    pygame.display.set_caption("Snakes and Ladders BFS")
     clock = pygame.time.Clock()
     app = App()
 
